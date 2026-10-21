@@ -1,0 +1,1 @@
+{"name":"futari-no-omajinai","version":"1.0.0","private":true,"type":"module","scripts":{"dev":"vite --host 0.0.0.0","build":"vite build","preview":"vite preview --host 0.0.0.0","export:sample":"python3 scripts/export_sample.py"},"devDependencies":{"vite":"^6.1.0","@playwright/test":"^1.51.0"}}
