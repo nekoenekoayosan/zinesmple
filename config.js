@@ -1,6 +1,6 @@
 // 商品・公開素材の設定はここにまとめます。完全版PDFは public に置かないでください。
 export const product = { title: 'ふたりのおまじない', price: 500, priceNote: '予定価格', copies: 30, dmUrl: null };
-export const cards = [{ id: 'one', name: 'おまじないカード 01', image: '/assets/card.svg', provisional: true }];
+export const cards = [{ id: 'one', name: 'おまじないカード 01', image: '/assets/card-01.png', provisional: false }];
 // export_sample.py が生成する /assets/sample/manifest.json があれば優先して読み込みます。
 export const samplePages = [
  {type:'cover', image:'/assets/cover.svg', label:'表紙', provisional:true},

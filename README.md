@@ -11,7 +11,7 @@ Node.js 22以上。`npm ci --cache /workspace/.npm-cache` の後、`npm run dev`
 `config.js` が商品情報・カード・背景の設定場所です。
 - `product.price`: 現在500円。`priceNote`も変更可能。
 - `product.dmUrl`: 正式なHTTPSのDMリンクが届いたときだけ指定。未設定時はリンクを表示しません。
-- `cards`: 画像・名前・idを追加して10枚まで運用可能。完成素材は `provisional:false` にします。
+- `cards`: 画像・名前・idを追加して10枚まで運用可能。完成素材は `provisional:false` にします。現在は `/assets/card-01.png` を参照します。縦長55×91mmの比率で書き出し、`public/assets/card-01.png` に配置してください。この画像はユーザーのMacにあるため、リポジトリにはまだ含まれていません。
 - `backgrounds`: 自作または利用許可のある写真を `public/assets/` に置き指定します。
 - `hand.image`: 自作の仮の手イラスト。使用許可済みの透過素材へ差し替え可能。カードとの合成位置は `src.js` の `draw()` 内で調整できます。
 - 表紙などの仮SVGは仮素材と明示。本文は未作成で、見本の罫線のみです。架空の本文は掲載していません。

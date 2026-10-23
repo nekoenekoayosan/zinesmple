@@ -10,3 +10,12 @@
 #flipBook{width:100%;height:100%}#flipBook .stf__wrapper{height:100%}
 #flipBook .stf__wrapper{transform:translateX(var(--cover-shift,0px));transition:transform .75s ease}
 #zoomContent .page img{width:650px}
+/* The finished card is portrait: 55 × 91 mm, without stretching. */
+.hero-card{width:145px;aspect-ratio:55/91;object-fit:contain;top:220px;left:240px}
+#carryCard{width:113px;aspect-ratio:55/91;object-fit:contain}
+.is-out #carryCard{transform:translate(60px,-58px) rotate(14deg)}
+.is-wallet.is-out #carryCard{transform:translate(35px,-58px) rotate(7deg)}
+.card-detail>img{width:190px;max-width:100%;aspect-ratio:55/91;object-fit:contain;margin:25px auto 35px}
+.size-card{width:77px;height:127.4px;object-fit:contain}
+@media(max-width:760px){.hero-card{width:108px;top:165px;left:calc(50% + 35px)}.card-detail>img{width:165px}.size-card{width:55px;height:91px}}
+@media(max-width:365px){.hero-card{left:calc(50% + 20px)}.size-card{width:49.5px;height:81.9px}}
