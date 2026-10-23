@@ -1,5 +1,6 @@
 {
   "source": "private/book.pdf",
-  "spreads": [2, 4],
+  "layout": "auto",
+  "page_pairs": [[2, 3], [6, 7]],
   "dpi": 160
 }

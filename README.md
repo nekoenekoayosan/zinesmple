@@ -19,10 +19,10 @@ Node.js 22以上。`npm ci --cache /workspace/.npm-cache` の後、`npm run dev`
 ## 本物のPDFで試し読みを作る
 完全版PDFを **`private/book.pdf`** に置きます。`private/` はGit対象外、Viteの公開ディレクトリ外です。開発サーバーにも private/ とPDFファイルの配信拒否を設定しています。完全版を `public/` に置かないでください。
 
-1. `python3 -m venv /workspace/zine-tools` を作り、`/workspace/zine-tools/bin/pip install PyMuPDF==1.26.7`。
-2. `scripts/sample-selection.json` の `spreads` に公開する **PDFページ番号（1始まり）** を表示順で指定。例 `[2,4]` は2–3と6–7です。並べ替え・追加もここだけで行えます。
+1. `python3 -m venv /workspace/zine-tools` を作り、`/workspace/zine-tools/bin/pip install PyMuPDF==1.26.5`。
+2. `scripts/sample-selection.json` の `page_pairs` に公開する**冊子のページ番号**を指定。例 `[[2,3],[6,7]]` は2–3と6–7ページです。表示順もここで変更できます。
 3. リポジトリ直下で `/workspace/zine-tools/bin/python scripts/export_sample.py` を実行。
-4. 16–1の右半分を表紙、左半分を裏表紙として自動分割。選択した本文だけにSAMPLEを焼き込み、画像とmanifestを `public/assets/sample/` に作ります。省略箇所には区切りが入ります。未選択ページと元PDFは出力しません。
+4. `layout: "auto"` で16ページの単ページPDF（表紙1→本文2〜15→裏表紙16）と8ページの印刷見開きPDFを自動判別します。単ページ版は必要なページだけを結合し、印刷版は16–1を左右に分割します。SAMPLEは本文の各ページに焼き込み、公開画像とmanifestだけを `public/assets/sample/` に作ります。未選択ページ・元PDFは出力しません。
 5. サイトはmanifestを自動検出。表示・拡大を確認してから再ビルドしてください。画像は保存可能なので、公開してよい抜粋のみ指定してください。
 
 `booklet.cover` で表紙を指定できます。PDFを抜粋した場合は生成された表紙をヒーロー・サイズ比較にも自動反映します。`hand.provisional`、`booklet.provisional` も完成時に false にします。最初に仮素材一式を完成素材に替えたら、`src.js` 内の仮素材説明も確認してください。PDF由来本文の透かしは画像に焼き込み済みで、CSSを外しても残ります。
@@ -37,3 +37,15 @@ Canvas上のドラッグ、位置・大きさ・角度スライダーで調整�
 最初の画面に試し読みを大きく表示します。`page-flip` の紙の折れ・影の演出で、端のドラッグ、スワイプ、左右ボタン、矢印キーに対応しています。PCは見開き、狭い画面は1ページ表示。拡大時は演出を外して元の見開きをスクロールで読めます。動きを減らすOS設定ではアニメーションを短縮します。
 
 試し読みの実装は `reader.js`。`config.js` とPDFの公開manifestの形式は変更していません。本文の見開き画像を表示時だけ左右に切り分けるため、元PDFを作り直す必要はありません。
+
+## MacでPDFを反映する
+`private/book.pdf` を配置し、VS Codeのターミナルで1行ずつ実行してください。サイト起動中のターミナルは先に Control+C で止めます。
+
+```bash
+python3 -m venv .venv
+.venv/bin/python -m pip install PyMuPDF==1.26.5
+.venv/bin/python scripts/export_sample.py
+npm run dev
+```
+
+16ページ版はPDF自体も1〜16の読書順であることを確認してください。出力後、表紙・本文の順・裏表紙を確認してから公開します。
