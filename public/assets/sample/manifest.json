@@ -1,0 +1,42 @@
+[
+  {
+    "type": "cover",
+    "image": "/assets/sample/cover.png",
+    "label": "表紙",
+    "provisional": false
+  },
+  {
+    "type": "spread",
+    "image": "/assets/sample/spread-3-4.png",
+    "label": "3–4ページ",
+    "provisional": false
+  },
+  {
+    "type": "spread",
+    "image": "/assets/sample/spread-5-6.png",
+    "label": "5–6ページ",
+    "provisional": false
+  },
+  {
+    "type": "page",
+    "image": "/assets/sample/page-7.png",
+    "label": "7ページ",
+    "provisional": false
+  },
+  {
+    "type": "gap",
+    "label": "続きは冊子で"
+  },
+  {
+    "type": "spread",
+    "image": "/assets/sample/spread-15-16.png",
+    "label": "15–16ページ",
+    "provisional": false
+  },
+  {
+    "type": "cover",
+    "image": "/assets/sample/back.png",
+    "label": "裏表紙",
+    "provisional": false
+  }
+]
