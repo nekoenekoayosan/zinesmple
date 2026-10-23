@@ -16,3 +16,34 @@ test('最初に大きな試し読み・紙の端のドラッグ',async({page})=>
  await page.mouse.up();
  await expect(page.locator('#pageLabel')).toHaveText('本文の仮レイアウト');
 });
+test('15ページ単独表示・省略案内・裏表紙',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.route('**/assets/sample/manifest.json',route=>route.fulfill({json:[
+  {type:'cover',label:'表紙',image:'/assets/cover.svg'},
+  ...[2,4,6].map(n=>({type:'spread',label:`${n}–${n+1}ページ`,image:'/assets/spread.svg'})),
+  {type:'gap',label:'続きは冊子で'},
+  {type:'page',label:'15ページ',image:'/assets/back.svg'},
+  {type:'cover',label:'裏表紙',image:'/assets/back.svg'}
+ ]}));
+ await page.goto('/');
+ await expect(page.locator('#pageCount')).toHaveText('01 / 07');
+ let sawGap=false;
+ for(let i=0;i<12;i++){
+  const label=await page.locator('#pageLabel').textContent();
+  if(label==='続きは冊子で')sawGap=true;
+  if(label==='15ページ')break;
+  await page.locator('#next').click();
+  await page.waitForTimeout(100);
+ }
+ expect(sawGap).toBeTruthy();
+ await expect(page.locator('#pageLabel')).toHaveText('15ページ');
+ await page.locator('#zoom').click();
+ await expect(page.locator('#zoomContent .paper.page img')).toHaveAttribute('alt','15ページ');
+ await expect(page.locator('#zoomContent .watermark')).toHaveText('SAMPLE');
+ await page.locator('#closeZoom').click();
+ for(let i=0;i<3&&await page.locator('#pageLabel').textContent()!=='裏表紙';i++){
+  await page.locator('#next').click();await page.waitForTimeout(100);
+ }
+ await expect(page.locator('#pageLabel')).toHaveText('裏表紙');
+ await expect(page.locator('#next')).toBeDisabled();
+});

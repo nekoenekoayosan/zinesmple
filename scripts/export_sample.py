@@ -13,17 +13,33 @@ def export_sample(config, root=ROOT):
     public = (root / 'public').resolve()
     if source.is_relative_to(public):
         raise ValueError('完全版PDFは public の外、private/ に置いてください。')
-    # page_pairs は冊子のページ番号。旧設定のspreadsも引き続き対応。
-    pairs = config.get('page_pairs')
-    if pairs is None:
-        pairs = [[2*n-2, 2*n-1] for n in config.get('spreads', [2, 4])]
-    if not isinstance(pairs, list) or not all(
-        isinstance(pair, list) and len(pair) == 2
-        and all(type(n) is int for n in pair)
-        and 2 <= pair[0] <= 14 and pair[0] % 2 == 0 and pair[1] == pair[0]+1
-        for pair in pairs
-    ) or len({tuple(p) for p in pairs}) != len(pairs):
-        raise ValueError('page_pairs は [[2,3],[6,7]] のように、本文の見開きを重複なく指定してください。')
+    # 公開番号はPDF内の位置ではなく、冊子のノンブル（表紙1・裏表紙16）。
+    visible = config.get('visible_pages')
+    if visible is not None:
+        if not isinstance(visible, list) or not all(type(n) is int and 2 <= n <= 15 for n in visible) or len(set(visible)) != len(visible):
+            raise ValueError('visible_pages は重複のない本文ページ番号2〜15の配列です。')
+        groups = []
+        i = 0
+        while i < len(visible):
+            n = visible[i]
+            if n % 2 == 0 and i+1 < len(visible) and visible[i+1] == n+1:
+                groups.append([n,n+1])
+                i += 2
+            else:
+                groups.append([n])
+                i += 1
+    else:
+        # 以前のpage_pairs / spreads設定も使えます。
+        groups = config.get('page_pairs')
+        if groups is None:
+            groups = [[2*n-2, 2*n-1] for n in config.get('spreads', [2, 4])]
+        if not isinstance(groups, list) or not all(
+            isinstance(pair, list) and len(pair) == 2
+            and all(type(n) is int for n in pair)
+            and 2 <= pair[0] <= 14 and pair[0] % 2 == 0 and pair[1] == pair[0]+1
+            for pair in groups
+        ) or len({tuple(p) for p in groups}) != len(groups):
+            raise ValueError('page_pairs は [[2,3],[6,7]] のように、本文の見開きを重複なく指定してください。')
     output = public / 'assets/sample'
     manifest = []
     with fitz.open(source) as doc:
@@ -31,14 +47,17 @@ def export_sample(config, root=ROOT):
         if layout == 'auto':
             layout = {16: 'single', 8: 'printer_spreads'}.get(len(doc))
         if layout not in ('single', 'printer_spreads') or len(doc) != (16 if layout == 'single' else 8):
-            raise ValueError(f'PDFは{len(doc)}ページです。16ページの単ページ版（1〜16の順）または8ページの印刷見開き版に対応しています。')
+            raise ValueError(f'PDFは{len(doc)}ページです。16ページの単ページ版または8ページの印刷見開き版に対応しています。')
+        order = config.get('pdf_page_order', list(range(1,17)))
+        if layout == 'single' and (not isinstance(order, list) or len(order) != 16 or not all(type(n) is int for n in order) or sorted(order) != list(range(1,17))):
+            raise ValueError('pdf_page_order はPDFの先頭から順に、冊子番号1〜16を一度ずつ指定してください。')
         output.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=output.parent) as tmp:
             tmp = Path(tmp)
 
             def clip_for(number):
                 if layout == 'single':
-                    index, side = number-1, None
+                    index, side = order.index(number), None
                 elif number in (1, 16):
                     index, side = 0, 'right' if number == 1 else 'left'
                 else:
@@ -59,7 +78,7 @@ def export_sample(config, root=ROOT):
                     for (index, rect), width in zip(clips, widths):
                         target = fitz.Rect(x, 0, x+width, height)
                         page.show_pdf_page(target, doc, index, clip=rect)
-                        if kind == 'spread':
+                        if kind in ('spread', 'page'):
                             for y in (.28, .68):
                                 page.insert_text((x+width*.12, height*y), 'SAMPLE',
                                                  fontsize=width*.19, color=(.88,.38,.57), fill_opacity=.28)
@@ -69,10 +88,14 @@ def export_sample(config, root=ROOT):
 
             export([1], 'cover.png', '表紙', 'cover')
             previous = 1
-            for first, last in pairs:
+            for numbers in groups:
+                first, last = numbers[0], numbers[-1]
                 if first != previous+1:
                     manifest.append({'type':'gap', 'label':'続きは冊子で'})
-                export([first,last], f'spread-{first}-{last}.png', f'{first}–{last}ページ', 'spread')
+                if len(numbers) == 2:
+                    export(numbers, f'spread-{first}-{last}.png', f'{first}–{last}ページ', 'spread')
+                else:
+                    export(numbers, f'page-{first}.png', f'{first}ページ', 'page')
                 previous = last
             if previous != 15:
                 manifest.append({'type':'gap', 'label':'続きは冊子で'})
@@ -80,7 +103,7 @@ def export_sample(config, root=ROOT):
             (tmp / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8')
             if output.exists(): shutil.rmtree(output)
             shutil.copytree(tmp, output)
-    return len(pairs)+2, layout
+    return len(groups)+2, layout
 
 
 if __name__ == '__main__':
