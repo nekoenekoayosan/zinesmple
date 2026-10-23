@@ -49,3 +49,20 @@ npm run dev
 ```
 
 現在の16ページPDFは、1ページ目が裏表紙、2ページ目が表紙です。`pdf_groups` の番号はすべてPDF上のページ番号です。15–16ページは見開きで表示し、最後にPDF1ページ目の裏表紙を片側だけ表示します。
+
+## 友達に送るURLを作る（GitHub Pages）
+公開するのは `dist/` のみ。`.github/workflows/deploy.yml` でmainへのpush時にビルド・公開します。GitHubのリポジトリで **Settings → Pages → Build and deployment → Source: GitHub Actions** を選びます。
+
+実物のカード・公開抜粋はMac側にしかないため、Macで先に次を実行してください。完全版PDF・private/・.venv/ は追加しません。
+
+```bash
+git pull origin main
+.venv/bin/python scripts/export_sample.py
+git add public/assets/card-01.png public/assets/sample/
+git commit -m "Add public card and sample pages"
+git push origin main
+```
+
+GitHubのActionsで **Publish ZINE website** が成功したら、デプロイ結果に表示されるURLを開きます。想定URLは `https://nekoenekoayosan.github.io/zinesmple/`（公開成功前は利用できません）。公開はログイン不要で閲覧できるサイトになります。仮の背景・手素材は、その表示を残した状態で公開します。
+
+`node scripts/check-release.mjs` はカードと抜粋の存在、表紙・裏表紙、public内にPDFがないことを確認します。素材が未反映の状態はデプロイせず、Actionsで不足ファイルを表示します。`npm run build -- --base=/zinesmple/` でGitHub Pages配下用にビルドでき、素材URLも自動で対応します。

@@ -1,4 +1,5 @@
 import './style.css';
+import {assetUrl} from './asset-url.js';
 import {createReader} from './reader.js';
 import {product,cards,samplePages,backgrounds,hand,booklet} from './config.js';
 const $=s=>document.querySelector(s);
@@ -15,7 +16,7 @@ if(product.dmUrl){const u=new URL(product.dmUrl);if(u.protocol==='https:'){$('#d
 // 最初の画面は試し読み。紹介文はその次へ。
 $('main').prepend($('#read'));
 const reader = createReader(samplePages);
-fetch('/assets/sample/manifest.json').then(r=>r.ok?r.json():null).then(p=>{if(p?.length){reader.load(p);document.querySelectorAll('.hero-book,.size-book').forEach(i=>{i.src=p[0].image;i.alt='ふたりのおまじない 表紙';});$('.material-note').textContent='';$('.read-section .section-head small').textContent='公開用に抜粋したページを表示しています。';}}).catch(()=>{});
+fetch(assetUrl('/assets/sample/manifest.json')).then(r=>r.ok?r.json():null).then(p=>{if(p?.length){p=p.map(entry=>entry.image?{...entry,image:assetUrl(entry.image)}:entry);reader.load(p);document.querySelectorAll('.hero-book,.size-book').forEach(i=>{i.src=p[0].image;i.alt='ふたりのおまじない 表紙';});$('.material-note').textContent='';$('.read-section .section-head small').textContent='公開用に抜粋したページを表示しています。';}}).catch(()=>{});
 let scene='phone',out=false;function carry(){const s=$('#objectStage');s.classList.toggle('is-wallet',scene==='wallet');s.classList.toggle('is-out',out);$('#toggleCard').innerHTML=out?'カードを入れる <span>↓</span>':'カードを取り出す <span>↑</span>';document.querySelectorAll('[data-scene]').forEach(b=>b.classList.toggle('active',b.dataset.scene===scene));}document.querySelectorAll('[data-scene]').forEach(b=>b.onclick=()=>{scene=b.dataset.scene;carry();});$('#toggleCard').onclick=()=>{out=!out;carry();};
 const canvas=$('#photoCanvas'),ctx=canvas.getContext('2d');let bgImg,cardImg,handImg,currentCard=0,currentBg=0,custom=false;let drawVersion=0;const load=src=>new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=reject;i.src=src;});
 function draw(){if(!bgImg||!cardImg||!handImg)return;ctx.clearRect(0,0,900,1600);const r=Math.max(900/bgImg.width,1600/bgImg.height);ctx.drawImage(bgImg,(900-bgImg.width*r)/2,(1600-bgImg.height*r)/2,bgImg.width*r,bgImg.height*r);ctx.save();ctx.translate(+$('#posX').value*9,+$('#posY').value*16);ctx.rotate(+$('#angle').value*Math.PI/180);const s=+$('#scale').value/100;ctx.scale(s,s);ctx.shadowColor='#38212230';ctx.shadowBlur=20;ctx.drawImage(handImg,-260,-240,640,800);ctx.drawImage(cardImg,-180,-430,308,510);ctx.shadowBlur=0;ctx.fillStyle='#ecc4b0';ctx.strokeStyle='#845b50';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(-130,25,30,70,-.5,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();if((!custom && backgrounds[currentBg].provisional)||cards[currentCard].provisional||hand.provisional){ctx.fillStyle='#fffdf0dd';ctx.fillRect(24,1530,400,44);ctx.fillStyle='#5d424c';ctx.font='22px sans-serif';ctx.fillText('仮素材 / ふたりのおまじない',40,1560);}}
