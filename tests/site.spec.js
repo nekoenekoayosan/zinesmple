@@ -47,3 +47,36 @@ test('15ページ単独表示・省略案内・裏表紙',async({page})=>{
  await expect(page.locator('#pageLabel')).toHaveText('裏表紙');
  await expect(page.locator('#next')).toBeDisabled();
 });
+test('PDF15–16を同じ見開きにし、PDF1の裏表紙は単独',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ const pages=[
+  {type:'cover',label:'表紙',image:'/assets/cover.svg'},
+  {type:'spread',label:'3–4ページ',image:'/assets/spread.svg'},
+  {type:'spread',label:'5–6ページ',image:'/assets/spread.svg'},
+  {type:'page',label:'7ページ',image:'/assets/back.svg'},
+  {type:'gap',label:'続きは冊子で'},
+  {type:'spread',label:'15–16ページ',image:'/assets/spread.svg'},
+  {type:'cover',label:'裏表紙',image:'/assets/back.svg'}
+ ];
+ await page.route('**/assets/sample/manifest.json',route=>route.fulfill({json:pages}));
+ await page.goto('/');await expect(page.locator('#pageCount')).toHaveText('01 / 07');
+ for(let i=0;i<12&&await page.locator('#pageLabel').textContent()!=='15–16ページ';i++){
+  await page.locator('#next').click();await page.waitForTimeout(100);
+ }
+ await expect(page.locator('#pageLabel')).toHaveText('15–16ページ');
+ const left=page.locator('.book-leaf.leaf-left').filter({has:page.locator('img[alt="15–16ページ"]')});
+ const right=page.locator('.book-leaf.leaf-right').filter({has:page.locator('img[alt="15–16ページ"]')});
+ if(test.info().project.name==='desktop'){
+  await expect(left).toBeVisible();await expect(right).toBeVisible();
+  const a=await left.boundingBox(),b=await right.boundingBox();
+  expect(Math.abs(a.y-b.y)).toBeLessThan(1);expect(Math.abs(a.x+a.width-b.x)).toBeLessThan(1);
+ }
+ await page.locator('#zoom').click();await expect(page.locator('#zoomContent .paper.spread')).toBeVisible();
+ await page.locator('#closeZoom').click();
+ for(let i=0;i<3&&await page.locator('#pageLabel').textContent()!=='裏表紙';i++){
+  await page.locator('#next').click();await page.waitForTimeout(100);
+ }
+ await expect(page.locator('#pageLabel')).toHaveText('裏表紙');
+ await expect(page.locator('#next')).toBeDisabled();
+ await expect(page.locator('.book-leaf').last().locator('.paper.cover')).toBeVisible();
+});

@@ -30,7 +30,7 @@ export function createReader(initialPages) {
     pages = nextPages;
     leaves = pages.flatMap((p, source) => p.type === 'spread'
       ? [{...p, source, half: 'left'}, {...p, source, half: 'right'}]
-      : p.type === 'gap' ? [{...p, source}, {...p, source, quiet: true}] : [{...p, source}]);
+      : ['gap', 'page'].includes(p.type) ? [{...p, source}, {...p, source, quiet: true}] : [{...p, source}]);
     if (leaves.length % 2) leaves.splice(leaves.length - 1, 0, {type: 'gap', label: '余白', source: pages.length - 2, quiet: true});
     if (book) book.destroy();
     $('#pageStage').innerHTML = '<div id="flipBook"></div>';

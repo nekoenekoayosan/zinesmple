@@ -67,6 +67,27 @@ class ExportTest(unittest.TestCase):
                 # 15ページだけに切り出すため、同じ印刷見開きの14ページも出力しない。
                 self.assertFalse((out/'spread-14-15.png').exists())
 
+    def test_pdf_number_selection_and_last_spread(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            self.fixture(root,True)
+            config={'source':'private/book.pdf','layout':'single','cover_pdf_page':2,
+                    'back_pdf_page':1,'pdf_groups':[[3,4],[5,6],[7],[15,16]],'dpi':72}
+            count,_=export_sample(config,root)
+            out=root/'public/assets/sample'
+            self.assertEqual(count,6)
+            manifest=json.loads((out/'manifest.json').read_text())
+            self.assertEqual([p['label'] for p in manifest],
+                ['表紙','3–4ページ','5–6ページ','7ページ','続きは冊子で','15–16ページ','裏表紙'])
+            expected={'cover.png':[2],'back.png':[1],'spread-3-4.png':[3,4],
+                      'spread-5-6.png':[5,6],'page-7.png':[7],'spread-15-16.png':[15,16]}
+            self.assertEqual({p.name for p in out.glob('*.png')},set(expected))
+            for filename,numbers in expected.items():
+                pix=fitz.Pixmap(out/filename)
+                self.assertEqual((pix.width,pix.height),(128*len(numbers),182))
+                for i,n in enumerate(numbers):
+                    self.assertLessEqual(abs(pix.pixel(i*128+2,2)[0]-int(n/20*255)),1)
+
     def test_legacy_config(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder)
